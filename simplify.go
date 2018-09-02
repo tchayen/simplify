@@ -7,7 +7,8 @@ import (
 
 // Point stores coordinates.
 type Point struct {
-	X, Y, Z float64
+	X, Y float64 // Regular coordinates.
+	Z    float64 // Z-axis is used to store importance of given point in the line.
 }
 
 func area(a, b, c Point) float64 {
@@ -16,11 +17,12 @@ func area(a, b, c Point) float64 {
 
 // Simplify provides a way to simplify array of points using Visvalingam’s
 // algorithm.
-func Simplify(points []Point) {
+func Simplify(points []Point, fraction float64) {
 	if len(points) <= 2 {
 		return
 	}
 
+	// Compute the effective area of each point.
 	var triangles TriangleHeap
 	for i := 1; i < len(points)-1; i++ {
 		points[i].Z = area(points[i-1], points[i], points[i+1])
@@ -30,7 +32,7 @@ func Simplify(points []Point) {
 			a:    i - 1, b: i, c: i + 1,
 		}
 
-		// Skip collinear points.
+		// Filter out all points with zero area.
 		if points[t.b].Z == 0 {
 			continue
 		}
@@ -49,14 +51,23 @@ func Simplify(points []Point) {
 	heap.Init(&triangles)
 	maxArea := 0.0
 
-	// Repeat until there are only two edge points left.
+	// Repeat until the original line consists of only 2 points, namely the start
+	// and end points which are ommited in the heap.
 	for triangles.Len() > 0 {
+		// Find point with the least effective area and call it the current point.
 		t := triangles.Pop().(*Triangle)
+
+		// If its calculated area is less than that of the last point to be
+		// eliminated, use the latter's area instead
+		// (this ensures that the current point cannot be eliminated without
+		// eliminating previously eliminated points).
 		if points[t.b].Z < maxArea {
 			points[t.b].Z = maxArea
 		} else {
 			maxArea = points[t.b].Z
 		}
+
+		// Recompute the effective area of the two adjoining points.
 
 		if t.prev != nil {
 			t.prev.next = t.next
@@ -74,6 +85,5 @@ func Simplify(points []Point) {
 		} else {
 			points[t.c].Z = points[t.b].Z
 		}
-
 	}
 }
