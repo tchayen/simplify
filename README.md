@@ -7,6 +7,14 @@ Implementation of Visvalingam’s algorithm for line simplification.
 
 Runs in `O(n*log(n))` time.
 
+## Installation
+```bash
+go get github.com/tchayen/simplify
+```
+
+## Usage
+> _🚧 The lib is currently in progress, usage is not recommended yet 🚧_
+
 ## TODO
 - decide what metrics should be available to user (i.e. target percentage of
 points, target fixed number of points etc.)
