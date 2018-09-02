@@ -11,20 +11,17 @@ type Point struct {
 	Z    float64 // Z-axis is used to store importance of given point in the line.
 }
 
+// area calculates area of a triangle defined by given points.
 func area(a, b, c Point) float64 {
 	return math.Abs((a.X*(b.Y-c.Y) + b.X*(c.Y-a.Y) + c.X*(a.Y-b.Y)) / 2)
 }
 
-// Simplify provides a way to simplify array of points using Visvalingam’s
-// algorithm.
-func Simplify(points []Point) {
-	if len(points) <= 2 {
-		return
-	}
-
-	// Compute the effective area of each point.
+// prepareHeap prepares triangles and stores them in array that will be used as
+// a basis for heap.
+func prepareTriangles(points []Point) TriangleHeap {
 	var triangles TriangleHeap
 	for i := 1; i < len(points)-1; i++ {
+		// Compute the effective area of each point.
 		points[i].Z = area(points[i-1], points[i], points[i+1])
 		t := &Triangle{
 			heap: i - 1,
@@ -40,6 +37,30 @@ func Simplify(points []Point) {
 		triangles = append(triangles, t)
 	}
 
+	return triangles
+}
+
+// connectPoints adds connections between points before they are reordered by
+// heap initialization.
+func connectPoints(h TriangleHeap) {
+	for i := 1; i < len(h)-1; i++ {
+		h[i].prev = h[i-1]
+		h[i].next = h[i+1]
+	}
+	h[0].next = h[1]
+	h[len(h)-1].prev = h[len(h)-2]
+
+}
+
+// Simplify provides a way to simplify array of points using Visvalingam’s
+// algorithm.
+func Simplify(points []Point) {
+	if len(points) <= 2 {
+		return
+	}
+
+	triangles := prepareTriangles(points)
+
 	if triangles.Len() == 1 {
 		triangles[0].area = area(points[0], points[1], points[2])
 		points = triangles.toPointArray(points)
@@ -47,12 +68,7 @@ func Simplify(points []Point) {
 	}
 
 	// Initialize previous and next connections.
-	for i := 1; i < len(triangles)-1; i++ {
-		triangles[i].prev = triangles[i-1]
-		triangles[i].next = triangles[i+1]
-	}
-	triangles[0].next = triangles[1]
-	triangles[len(triangles)-1].prev = triangles[len(triangles)-2]
+	connectPoints(triangles)
 
 	heap.Init(&triangles)
 	maxArea := 0.0
