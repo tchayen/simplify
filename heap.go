@@ -38,8 +38,21 @@ func (h *TriangleHeap) Pop() interface{} {
 	return t
 }
 
-// update modifies the priority and value of an Item in the queue.
+// update modifies the area of a triangle.
+// NOTE: by usage of mechanisms beneath this function, the heap index is updated
+// correctly.
 func (h *TriangleHeap) update(t *Triangle, area float64) {
 	t.area = area
 	heap.Fix(h, t.heap)
+}
+
+func (h *TriangleHeap) toPointArray(points []Point) []Point {
+	result := make([]Point, h.Len()+2)
+	result[0] = points[0]
+	result[h.Len()+1] = points[len(points)-1]
+
+	for i := range *h {
+		result[i+1] = result[(*h)[i].b]
+	}
+	return result
 }

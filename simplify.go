@@ -17,7 +17,7 @@ func area(a, b, c Point) float64 {
 
 // Simplify provides a way to simplify array of points using Visvalingam’s
 // algorithm.
-func Simplify(points []Point, fraction float64) {
+func Simplify(points []Point) {
 	if len(points) <= 2 {
 		return
 	}
@@ -33,11 +33,17 @@ func Simplify(points []Point, fraction float64) {
 		}
 
 		// Filter out all points with zero area.
-		if points[t.b].Z == 0 {
+		if points[i].Z == 0 {
 			continue
 		}
 
 		triangles = append(triangles, t)
+	}
+
+	if triangles.Len() == 1 {
+		triangles[0].area = area(points[0], points[1], points[2])
+		points = triangles.toPointArray(points)
+		return
 	}
 
 	// Initialize previous and next connections.
@@ -68,12 +74,10 @@ func Simplify(points []Point, fraction float64) {
 		}
 
 		// Recompute the effective area of the two adjoining points.
-
 		if t.prev != nil {
 			t.prev.next = t.next
 			t.prev.c = t.c
 			triangles.update(t.prev, area(points[t.a], points[t.b], points[t.c]))
-
 		} else {
 			points[t.a].Z = points[t.b].Z
 		}
